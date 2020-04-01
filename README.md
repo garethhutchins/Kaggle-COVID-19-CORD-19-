@@ -7,30 +7,39 @@ The script output is in the following Tuple files
 
 -TEXTID
   -Unique Text Idenitifier of Segment_Filename
+
 -Drugs
   -TEXTID
   -DrugName
- -Diseases
+ 
+-Diseases
   -TextID
   -Disease
- -Sympotoms
+
+-Sympotoms
   -TextID
   -Sympotm
- -Sentiment
+
+-Sentiment
   -TextID
   -Sentiment
- -Locations
+
+-Locations
   -TextID
   -Location
- -ComplexConcepts
+
+-ComplexConcepts
   -TextID
   -ComplexConcept
- -SimpleConcept
+
+-SimpleConcept
   -TextID
   -SimpleConcept
- -Categories
+
+-Categories
   -TextID
   -Categorty
- -Locations
+
+-Locations
   -TextID
   -Location
