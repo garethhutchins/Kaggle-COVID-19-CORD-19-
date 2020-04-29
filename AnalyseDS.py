@@ -3,8 +3,8 @@ import json
 import requests
 import lxml.etree
 #set the text mining uri
-#uri = "http://ghaiaug.eastus.cloudapp.azure.com:40002/rs/"
-uri = "http://mag202-acasuite.eastus.cloudapp.azure.com:8240/rs/"
+
+uri = ""
 #Set the directory
 DirectoryName = "C:/Users/ghutchin/Documents/Work/COVID-19 Kaggle/Data/biorxiv_medrxiv/biorxiv_medrxiv/"
 #DirectoryName = "C:/Users/ghutchin/Documents/Work/COVID-19 Kaggle/Data/comm_use_subset/comm_use_subset/"
