@@ -3,11 +3,14 @@ import json
 import requests
 import lxml.etree
 #set the text mining uri
-
-uri = ""
+#uri = "http://ghaiaug.eastus.cloudapp.azure.com:40002/rs/"
+uri = "http://mag202-acasuite.eastus.cloudapp.azure.com:8240/rs/"
 #Set the directory
+DirectoryName = "C:/Users/ghutchin/Documents/Work/COVID-19 Kaggle/Data/biorxiv_medrxiv/biorxiv_medrxiv/"
+#DirectoryName = "C:/Users/ghutchin/Documents/Work/COVID-19 Kaggle/Data/comm_use_subset/comm_use_subset/"
+#DirectoryName = "C:/Users/ghutchin/Documents/Work/COVID-19 Kaggle/Data/custom_license/custom_license/"
+#DirectoryName = "C:/Users/ghutchin/Documents/Work/COVID-19 Kaggle/Data/noncomm_use_subset/noncomm_use_subset/"
 
-DirectoryName = ""
 Directory = os.fsencode(DirectoryName)
 def extract_values(obj, key):
     #Pull all values of specified key from nested JSON
@@ -41,6 +44,7 @@ for file in os.listdir(Directory) :
     ComplexConcepts =[]
     SimpleConcepts = []
     Categories = []
+    Epidemics = []
     with open(DirectoryName + filename) as json_file:
         #Load the json file
         data = json.load(json_file)
@@ -51,7 +55,8 @@ for file in os.listdir(Directory) :
             postheaders = {}
             postheaders['Content-Type'] = "application/xml"
             #Create the xml post add the text
-            xml = "<?xml version=" + '"' + "1.0" + '"'+ " encoding=" + '"' + "UTF-8" + '"'+ " ?><Nserver><ResultEncoding>UTF-8</ResultEncoding><TextID>COVID</TextID><NSTEIN_Text>"+ t + "</NSTEIN_Text><LanguageID>ENGLISH</LanguageID><Methods><nconceptextractor><ExcludeEntities/><SimpleConcepts></SimpleConcepts><ComplexConcepts><RelevancyLevel>FIRST</RelevancyLevel></ComplexConcepts></nconceptextractor><nfinder><nfExtract><Cartridges><Cartridge>GL</Cartridge><Cartridge>DISEASES</Cartridge><Cartridge>DRUGS</Cartridge><Cartridge>SYMPTOMS</Cartridge></Cartridges></nfExtract><nfFullTextSearch><Cartridges><Cartridge>DISEASES</Cartridge><Cartridge>DRUGS</Cartridge><Cartridge>SYMPTOMS</Cartridge><Cartridge>GL</Cartridge></Cartridges></nfFullTextSearch></nfinder><nsentiment Name=" + '"' +"RequestName" + '"' + "><Name>Nstein</Name></nsentiment><ncategorizer><KBid>IPTC</KBid><NumberOfCategories>10</NumberOfCategories><RejectedCategories><NumberOfRejectedCategories>10</NumberOfRejectedCategories></RejectedCategories></ncategorizer></Methods></Nserver>"
+            #xml = "<?xml version=" + '"' + "1.0" + '"'+ " encoding=" + '"' + "UTF-8" + '"'+ " ?><Nserver><ResultEncoding>UTF-8</ResultEncoding><TextID>COVID</TextID><NSTEIN_Text>"+ t + "</NSTEIN_Text><LanguageID>ENGLISH</LanguageID><Methods><nconceptextractor><ExcludeEntities/><SimpleConcepts></SimpleConcepts><ComplexConcepts><RelevancyLevel>FIRST</RelevancyLevel></ComplexConcepts></nconceptextractor><nfinder><nfExtract><Cartridges><Cartridge>GL</Cartridge><Cartridge>DISEASES</Cartridge><Cartridge>DRUGS</Cartridge><Cartridge>SYMPTOMS</Cartridge></Cartridges></nfExtract><nfFullTextSearch><Cartridges><Cartridge>DISEASES</Cartridge><Cartridge>DRUGS</Cartridge><Cartridge>SYMPTOMS</Cartridge><Cartridge>GL</Cartridge></Cartridges></nfFullTextSearch></nfinder><nsentiment Name=" + '"' +"RequestName" + '"' + "><Name>Nstein</Name></nsentiment><ncategorizer><KBid>IPTC</KBid><NumberOfCategories>10</NumberOfCategories><RejectedCategories><NumberOfRejectedCategories>10</NumberOfRejectedCategories></RejectedCategories></ncategorizer></Methods></Nserver>"
+            xml = "<?xml version=" + '"' + "1.0" + '"'+ " encoding=" + '"' + "UTF-8" + '"'+ " ?><Nserver><ResultEncoding>UTF-8</ResultEncoding><TextID>COVID</TextID><NSTEIN_Text>"+ t + "</NSTEIN_Text><LanguageID>ENGLISH</LanguageID><Methods><nconceptextractor><ExcludeEntities/><SimpleConcepts></SimpleConcepts><ComplexConcepts><RelevancyLevel>FIRST</RelevancyLevel></ComplexConcepts></nconceptextractor><nfinder><nfExtract><Cartridges><Cartridge>GL</Cartridge><Cartridge>DISEASES</Cartridge><Cartridge>DRUGS</Cartridge><Cartridge>SYMPTOMS</Cartridge></Cartridges></nfExtract><nfFullTextSearch><Cartridges><Cartridge>Epidemics</Cartridge><Cartridge>DISEASES</Cartridge><Cartridge>DRUGS</Cartridge><Cartridge>SYMPTOMS</Cartridge><Cartridge>GL</Cartridge></Cartridges></nfFullTextSearch></nfinder><nsentiment Name=" + '"' +"RequestName" + '"' + "><Name>Nstein</Name></nsentiment><ncategorizer><KnowledgeBase><KBid>IPTC</KBid><NumberOfCategories>10</NumberOfCategories></KnowledgeBase><KnowledgeBase><KBid>MeSHLite</KBid><NumberOfCategories>10</NumberOfCategories></KnowledgeBase></ncategorizer></Methods></Nserver>"
             r = requests.post(uri,data=xml.encode('UTF-8'),headers=postheaders)
             if r.status_code != 200:
                 continue
@@ -73,7 +78,7 @@ for file in os.listdir(Directory) :
                 if hasattr(sc,'text'):
                     SimpleConcepts.append(sc.text)
             #Get the Categories
-            categories = root.findall('Results/ncategorizer/Categories/Category')
+            categories = root.findall('Results/ncategorizer/KnowledgeBase/Categories/Category')
             for c in categories:
                 if hasattr(c,'text'):
                     Categories.append(c.text)
@@ -100,20 +105,26 @@ for file in os.listdir(Directory) :
                                 if ftType == "GL":
                                     if MainTerm not in Locations:
                                         Locations.append(MainTerm)
+                                if ftType == "Epidemics":
+                                    if MainTerm not in Epidemics:
+                                        Epidemics.append(MainTerm)
                         #Now get the Sub Terms
                             for STchild in MTchild:
                                 if ftType == "DISEASES":
                                     if STchild.text not in DISEASES:
                                         DISEASES.append(STchild.text)
-                                if ftType == "SYMPTOMS":
+                                if STchild.text == "SYMPTOMS":
                                     if MainTerm not in SYMPTOMS:
-                                        SYMPTOMS.append(MainTerm)
-                                if ftType == "DRUGS":
+                                        SYMPTOMS.append(STchild.text)
+                                if STchild.text == "DRUGS":
                                     if MainTerm not in DRUGS:
-                                        DRUGS.append(MainTerm)
+                                        DRUGS.append(STchild.text)
                                 if ftType == "GL":
-                                    if MainTerm not in Locations:
-                                        Locations.append(MainTerm)
+                                    if STchild.text not in Locations:
+                                        Locations.append(STchild.text)
+                                if ftType == "Epidemics":
+                                    if STchild.text not in Epidemics:
+                                        Epidemics.append(STchild.text)
             NFResults = root.findall('Results/nfinder/nfExtract/ExtractedTerm')
             #Loop through all results
             for nf in FTResults:
@@ -136,6 +147,9 @@ for file in os.listdir(Directory) :
                             if nfType == "GL":
                                 if MainTerm not in Locations:
                                     Locations.append(MainTerm)
+                            if nfType == "Epidemics":
+                                if MainTerm not in Epidemics:
+                                    Epidemics.append(STchild.text)
                         #Now get the Sub Terms
                         for STchild in MTchild:
                             if nfType == "DISEASES":
@@ -150,49 +164,57 @@ for file in os.listdir(Directory) :
                             if nfType == "GL":
                                 if STchild.text not in Locations:
                                     Locations.append(STchild.text)
+                            if nfType == "Epidemics":
+                                if MainTerm not in Epidemics:
+                                    Epidemics.append(STchild.text)
             #Write the files out
             #text id
-            textid=open("TextID.txt","a+")
-            textid.write(str(tcount)+"_" + filename + "\n")
+            textid=open("TextID.txt","a+", encoding="utf-8")
+            textid.write(str(tcount)+"_" + str(filename) + "\n")
             textid.close
             print("Count " + str(tcount))
             #sentiment
-            sent=open("Sentiment.txt","a+")
-            sent.write(str(tcount)+"_" + filename + ";" + sentiment + "\n")
+            sent=open("Sentiment.txt","a+", encoding="utf-8")
+            sent.write(str(tcount)+"_" + filename + ";" + str(sentiment) + "\n")
             sent.close
             #Write the diseases to file
-            txtdis=open("DISEASES.txt","a+")
+            txtdis=open("DISEASES.txt","a+", encoding="utf-8")
             for D in DISEASES:
-                txtdis.write(str(tcount)+"_" + filename + ";" + D + ";" + "\n")
+                txtdis.write(str(tcount)+"_" + filename + ";" + str(D) + ";" + "\n")
             txtdis.close
             #Write the Drugs to file
-            txtdrugs=open("DRUGS.txt","a+")
+            txtdrugs=open("DRUGS.txt","a+", encoding="utf-8")
             for dr in DRUGS:
-                txtdrugs.write(str(tcount)+"_" + filename + ";" + dr + ";" + "\n")
+                txtdrugs.write(str(tcount)+"_" + filename + ";" + str(r) + ";" + "\n")
             txtdrugs.close
-            txtsymp=open("Symptoms.txt","a+")
+            txtsymp=open("Symptoms.txt","a+", encoding="utf-8")
             for s in SYMPTOMS:
-                txtsymp.write(str(tcount)+"_" + filename + ";" + s + ";" + "\n")
+                txtsymp.write(str(tcount)+"_" + filename + ";" + str(s) + ";" + "\n")
             txtsymp.close
             ##Concepts
-            txtcc=open("ComplexConcepts.txt","a+")
+            txtcc=open("ComplexConcepts.txt","a+", encoding="utf-8")
             for cc in ComplexConcepts:
-                txtcc.write(str(tcount)+"_" + filename + ";" + cc + ";" + "\n")
+                txtcc.write(str(tcount)+"_" + filename + ";" + str(cc) + ";" + "\n")
             txtcc.close
-            txtsc=open("SimpleConcepts.txt","a+")
+            txtsc=open("SimpleConcepts.txt","a+", encoding="utf-8")
             for sc in SimpleConcepts:
-                txtsc.write(str(tcount)+"_" + filename + ";" + sc + ";" + "\n")
+                txtsc.write(str(tcount)+"_" + filename + ";" + str(sc) + ";" + "\n")
             txtsc.close
             #Locations
-            txtL=open("Locations.txt","a+")
+            txtL=open("Locations.txt","a+", encoding="utf-8")
             for l in Locations:
-                txtL.write(str(tcount)+"_" + filename + ";" + l + ";" + "\n")
+                txtL.write(str(tcount)+"_" + filename + ";" + str(l) + ";" + "\n")
             txtL.close
             #Categories
-            txtcats=open("Categories.txt","a+")
+            txtcats=open("Categories.txt","a+", encoding="utf-8")
             for cats in Categories:
-                txtcats.write(str(tcount)+"_" + filename + ";" + cats + ";" + "\n")
+                txtcats.write(str(tcount)+"_" + filename + ";" + str(cats) + ";" + "\n")
             txtcats.close
+             #Epidemics
+            txteps=open("Epidemics.txt","a+", encoding="utf-8")
+            for eps in Epidemics:
+                txteps.write(str(tcount)+"_" + filename + ";" + str(eps) + ";" + "\n")
+            txteps.close
             #Write the text and ID
 
             tcount = tcount + 1
